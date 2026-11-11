@@ -338,12 +338,18 @@ html_portal = f"""<!DOCTYPE html>
 
                 <!-- Bold Underlined Subject Line -->
                 <div style="font-weight: bold; text-decoration: underline; margin-bottom: 18px;">
-                    APPLICATION FOR FELLOWSHIP OF REPUBLIC HALL, KNUST
+                    Application To Become A Fellow of Republic Hall, KNUST
                 </div>
 
-                <!-- Concise Body Paragraph -->
+                <!-- Body Paragraphs -->
+                <p style="margin-bottom: 14px; text-align: left; line-height: 1.75;">
+                    I write to formally express my interest in being a fellow of Republic Hall, KNUST.
+                </p>
+                <p style="margin-bottom: 14px; text-align: left; line-height: 1.75;">
+                    I am eager to join this family and collaborate with colleague fellows in advancing the traditions of the hall and providing mentorship to junior members.
+                </p>
                 <p style="margin-bottom: 28px; text-align: left; line-height: 1.75;">
-                    I write to formally express my interest in serving as a Fellow of Republic Hall, KNUST. I am eager to actively network and collaborate with other Fellows and past students (alumni) to advance the rich traditions, mentorship networks, and continuous development of the Hall. Furthermore, I am deeply committed to promoting student welfare, academic excellence, and a supportive residential community in close partnership with Hall Management. I thank you for your kind consideration and look forward to hearing favorably from you soon.
+                    I thank you for your kind consideration and look forward to hearing favorably from you soon
                 </p>
 
                 <!-- Sign-off -->

@@ -13,7 +13,7 @@ st.set_page_config(
 # ==========================================
 # SET THE SUBMISSION PHONE NUMBER HERE:
 # ==========================================
-SUBMISSION_PHONE_DISPLAY = "0506759271"   # Change to the actual receiver number
+SUBMISSION_PHONE_DISPLAY = "0506759271"   # Change to the Hall Tutor's actual number
 SUBMISSION_PHONE_RAW = "233506759271"      # International format (233...) for the direct WhatsApp link
 
 # Hide Streamlit default chrome
@@ -130,7 +130,7 @@ html_portal = f"""<!DOCTYPE html>
                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     </span>
-                    <input id="inp-name" type="text" value="Dr. John Mensah, Senior Lecturer" placeholder="e.g., Dr. John Mensah, Senior Lecturer"
+                    <input id="inp-name" type="text" placeholder="e.g., Dr. John Mensah, Senior Lecturer"
                         class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b6623] transition" />
                 </div>
                 <p class="text-xs text-slate-400 mt-1">Include honorary title, prefix (e.g., Prof., Dr., Mr., Mrs.), and university rank.</p>
@@ -145,7 +145,7 @@ html_portal = f"""<!DOCTYPE html>
                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                     </span>
-                    <input id="inp-unit" type="text" value="College of Engineering / Dept. of Mechanical Engineering" placeholder="e.g., College of Engineering / Dept. of Mechanical Engineering"
+                    <input id="inp-unit" type="text" placeholder="e.g., College of Engineering / Dept. of Mechanical Engineering"
                         class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b6623] transition" />
                 </div>
                 <p class="text-xs text-slate-400 mt-1">State your primary academic college, faculty, institute, or university unit.</p>
@@ -161,7 +161,7 @@ html_portal = f"""<!DOCTYPE html>
                         <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                         </span>
-                        <input id="inp-phone" type="tel" value="0240000000" placeholder="0240000000"
+                        <input id="inp-phone" type="tel" placeholder="e.g., 0240000000"
                             class="w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b6623] transition" />
                     </div>
                 </div>
@@ -173,7 +173,7 @@ html_portal = f"""<!DOCTYPE html>
                         <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         </span>
-                        <input id="inp-email" type="email" value="jmensah@knust.edu.gh" placeholder="jmensah@knust.edu.gh"
+                        <input id="inp-email" type="email" placeholder="e.g., jmensah@knust.edu.gh"
                             class="w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b6623] transition" />
                     </div>
                 </div>
@@ -193,7 +193,7 @@ html_portal = f"""<!DOCTYPE html>
                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     </span>
-                    <input id="inp-date" type="text" value="November 11, 2026"
+                    <input id="inp-date" type="text" placeholder="e.g., November 11, 2026"
                         class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b6623] transition" />
                 </div>
                 <p class="text-xs text-slate-400 mt-1">Standard format: Month DD, YYYY (e.g. November 11, 2026)</p>
@@ -273,9 +273,10 @@ html_portal = f"""<!DOCTYPE html>
                         Step 2: Where to Send Your Downloaded PDF
                     </span>
                     <p class="text-xs text-slate-700">
-                        After downloading your signed PDF below, send it via WhatsApp or contact:
+                        After downloading your signed PDF below, send it via WhatsApp to the <strong>Hall Tutor</strong>:
                     </p>
-                    <div class="mt-1 flex items-center gap-2">
+                    <div class="mt-1 flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-600">Hall Tutor:</span>
                         <span id="sub-phone-text" class="text-base sm:text-lg font-extrabold text-[#0b6623] bg-white px-3 py-1 rounded-lg border border-emerald-200 tracking-wide select-all">
                             {SUBMISSION_PHONE_DISPLAY}
                         </span>
@@ -288,12 +289,12 @@ html_portal = f"""<!DOCTYPE html>
                     </button>
                     <a href="https://wa.me/{SUBMISSION_PHONE_RAW}" target="_blank" rel="noopener noreferrer"
                         class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#0b6623] text-white hover:bg-[#09521c] shadow-sm transition">
-                        💬 Send on WhatsApp
+                        💬 Send to Hall Tutor on WhatsApp
                     </a>
                 </div>
             </div>
 
-            <!-- Action Buttons Row (Matches Screenshot 3) -->
+            <!-- Action Buttons Row -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <button type="button" id="btn-download-pdf" disabled
                     class="w-full py-3.5 px-5 rounded-xl font-bold text-sm text-white bg-[#0b6623] hover:bg-[#09521c] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex items-center justify-center gap-2 transition">
@@ -305,7 +306,7 @@ html_portal = f"""<!DOCTYPE html>
                 </button>
             </div>
 
-            <!-- Live A4 Document Sheet (Matches Screenshot 3) -->
+            <!-- Live A4 Document Sheet -->
             <div id="a4-document" class="a4-sheet">
 
                 <!-- Optional Crest Header if logo exists in repo -->
@@ -317,7 +318,7 @@ html_portal = f"""<!DOCTYPE html>
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 12pt;">
                     <tr>
                         <td style="width: 85px; font-weight: bold; padding-bottom: 6px; vertical-align: top;">Date:</td>
-                        <td id="out-date" style="padding-bottom: 6px; vertical-align: top;">November 11, 2026</td>
+                        <td id="out-date" style="padding-bottom: 6px; vertical-align: top;">[Application Date]</td>
                     </tr>
                     <tr>
                         <td style="font-weight: bold; padding-bottom: 6px; vertical-align: top;">To:</td>
@@ -326,8 +327,8 @@ html_portal = f"""<!DOCTYPE html>
                     <tr>
                         <td style="font-weight: bold; vertical-align: top;">From:</td>
                         <td style="vertical-align: top;">
-                            <div id="out-name">Dr. John Mensah, Senior Lecturer</div>
-                            <div><span id="out-unit">College of Engineering / Dept. of Mechanical Engineering</span>, KNUST</div>
+                            <div id="out-name">[Full Name & Academic Title]</div>
+                            <div><span id="out-unit">[College/Faculty/Department/Office/Center]</span>, KNUST</div>
                         </td>
                     </tr>
                 </table>
@@ -340,7 +341,7 @@ html_portal = f"""<!DOCTYPE html>
                     APPLICATION FOR FELLOWSHIP OF REPUBLIC HALL, KNUST
                 </div>
 
-                <!-- Concise 5-Line Body Paragraph -->
+                <!-- Concise Body Paragraph -->
                 <p style="margin-bottom: 28px; text-align: left; line-height: 1.75;">
                     I write to formally express my interest in serving as a Fellow of Republic Hall, KNUST. I am eager to actively network and collaborate with other Fellows and past students (alumni) to advance the rich traditions, mentorship networks, and continuous development of the Hall. Furthermore, I am deeply committed to promoting student welfare, academic excellence, and a supportive residential community in close partnership with Hall Management. I thank you for your kind consideration and look forward to hearing favorably from you soon.
                 </p>
@@ -355,10 +356,10 @@ html_portal = f"""<!DOCTYPE html>
                 </div>
 
                 <!-- Signatory Block -->
-                <div id="out-sign-name" style="font-weight: bold;">Dr. John Mensah, Senior Lecturer</div>
-                <div><span id="out-sign-unit">College of Engineering / Dept. of Mechanical Engineering</span>, KNUST</div>
+                <div id="out-sign-name" style="font-weight: bold;">[Full Name & Academic Title]</div>
+                <div><span id="out-sign-unit">[College/Faculty/Department/Office/Center]</span>, KNUST</div>
                 <div style="font-size: 11pt; color: #334155; margin-top: 2px;">
-                    Contact: <span id="out-phone">0240000000</span> / <span id="out-email">jmensah@knust.edu.gh</span>
+                    Contact: <span id="out-phone">[Phone Number]</span> / <span id="out-email">[Email Address]</span>
                 </div>
 
             </div>

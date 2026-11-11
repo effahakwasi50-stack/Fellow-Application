@@ -338,7 +338,7 @@ html_portal = f"""<!DOCTYPE html>
 
                 <!-- Bold Underlined Subject Line -->
                 <div style="font-weight: bold; text-decoration: underline; margin-bottom: 18px;">
-                    Application To Become A Fellow of Republic Hall, KNUST
+                    APPLICATION TO BECOME A FELLOW OF REPUBLIC HALL, KNUST
                 </div>
 
                 <!-- Body Paragraphs -->

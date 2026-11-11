@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --republic-green: #0b6623;
+    --republic-green-dark: #084c1a;
+    --republic-green-light: #12822f;
+    --republic-gold: #d4af37;
+    --republic-gold-light: #e8c85e;
+    --republic-gold-dark: #b89322;
+  }
+
+  body {
+    background-color: #f8fafc;
+    color: #1e293b;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+}
+
+.font-letter {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+}
+
+/* Touch action none for signature pad so touch drawing never scrolls viewport */
+.signature-canvas {
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* Print Styles */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  body {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Hide everything except the printable letter sheet */
+  .no-print,
+  nav,
+  header,
+  aside,
+  footer,
+  button,
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  #a4-letter-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 auto !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    padding: 24mm 22mm !important;
+    transform: none !important;
+  }
+}

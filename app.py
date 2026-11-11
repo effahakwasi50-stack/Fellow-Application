@@ -1,990 +1,589 @@
-"""
-Republic Hall Fellow Application Portal - Streamlit Edition
-Kwame Nkrumah University of Science and Technology (KNUST)
-
-Run with:
-    streamlit run app.py
-"""
-
 import streamlit as st
 import streamlit.components.v1 as components
-from datetime import date
+import base64
+import os
 
-# Configure Streamlit page
 st.set_page_config(
-    page_title="Republic Hall Fellow Application Portal - KNUST",
+    page_title="Republic Hall Fellow Application Portal | KNUST",
     page_icon="🏛️",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="collapsed"
 )
 
-# Custom Republic Hall CSS styling for Streamlit container
-st.markdown(
-    """<style>
-    :root {
-        --republic-green: #0b6623;
-        --republic-gold: #d4af37;
-    }
-    
-    .stApp {
-        background-color: #f8fafc;
-    }
+# ==========================================
+# SET THE SUBMISSION PHONE NUMBER HERE:
+# ==========================================
+SUBMISSION_PHONE_DISPLAY = "0506759271"   # Change to the actual receiver number
+SUBMISSION_PHONE_RAW = "233506759271"      # International format (233...) for the direct WhatsApp link
 
-    header[data-testid="stHeader"] {
-        display: none;
-    }
+# Hide Streamlit default chrome
+st.markdown("""
+    <style>
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        .block-container {
+            padding: 0rem !important;
+            max-width: 100% !important;
+        }
+        iframe {
+            border: none !important;
+            width: 100% !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-    .main .block-container {
-        padding-top: 1.5rem;
-        padding-bottom: 2rem;
-        max-width: 1350px;
-    }
-    </style>""",
-    unsafe_allow_html=True,
-)
+# Automatically load your uploaded crest image if present in the GitHub repo
+logo_data_url = ""
+for filename in ["image.jpg", "logo.jpg", "image.png", "logo.png"]:
+    if os.path.exists(filename):
+        with open(filename, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("utf-8")
+            mime = "image/png" if filename.endswith(".png") else "image/jpeg"
+            logo_data_url = f"data:{mime};base64,{b64}"
+        break
 
-# Build full client-side interactive component with live signature drawing canvas,
-# real-time live A4 letter sheet preview, and one-click crisp PDF download
-today_str = date.today().strftime("%B %d, %Y")
-
-portal_html = f"""<!DOCTYPE html>
+html_portal = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Republic Hall Fellow Application Portal - KNUST</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>
-  * {{
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }}
-
-  body {{
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #f8fafc;
-    color: #1e293b;
-    padding: 12px;
-  }}
-
-  /* Top Navigation Banner */
-  .portal-header {{
-    background-color: #0b6623;
-    color: #ffffff;
-    border-radius: 12px;
-    border-bottom: 4px solid #d4af37;
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  }}
-
-  .header-left {{
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }}
-
-  .crest-svg {{
-    width: 60px;
-    height: 60px;
-    flex-shrink: 0;
-  }}
-
-  .header-title-box .sub {{
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    color: #d4af37;
-    text-transform: uppercase;
-  }}
-
-  .header-title-box h1 {{
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-    margin: 2px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }}
-
-  .motto-badge {{
-    font-size: 10px;
-    font-weight: 800;
-    background: #d4af37;
-    color: #084c1a;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    text-transform: uppercase;
-  }}
-
-  .header-subtitle {{
-    font-size: 12px;
-    color: #d1fae5;
-  }}
-
-  /* Split Screen Grid */
-  .grid-layout {{
-    display: grid;
-    grid-template-columns: 460px 1fr;
-    gap: 24px;
-    align-items: start;
-  }}
-
-  @media (max-width: 1024px) {{
-    .grid-layout {{
-      grid-template-columns: 1fr;
-    }}
-  }}
-
-  /* Left Form Card */
-  .form-card {{
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  }}
-
-  .form-title {{
-    font-size: 16px;
-    font-weight: 800;
-    color: #0b6623;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
-  }}
-
-  .compulsory-pill {{
-    font-size: 11px;
-    font-weight: 700;
-    background: #fef3c7;
-    color: #92400e;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    border: 1px solid #fde68a;
-  }}
-
-  .form-desc {{
-    font-size: 12px;
-    color: #64748b;
-    margin-bottom: 16px;
-  }}
-
-  .form-group {{
-    margin-bottom: 14px;
-  }}
-
-  .form-group label {{
-    display: block;
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #334155;
-    margin-bottom: 4px;
-  }}
-
-  .form-group label span.req {{
-    color: #dc2626;
-  }}
-
-  .form-input {{
-    width: 100%;
-    padding: 9px 12px;
-    font-size: 13px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    outline: none;
-    transition: border-color 0.15s;
-  }}
-
-  .form-input:focus {{
-    border-color: #0b6623;
-    box-shadow: 0 0 0 2px rgba(11, 102, 35, 0.15);
-  }}
-
-  .two-cols {{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }}
-
-  /* Live Signature Canvas */
-  .sig-section {{
-    margin-top: 18px;
-    padding-top: 14px;
-    border-top: 1px solid #f1f5f9;
-  }}
-
-  .sig-header {{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }}
-
-  .sig-badge {{
-    font-size: 11px;
-    font-weight: 600;
-    background: #ecfdf5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
-    padding: 2px 8px;
-    border-radius: 9999px;
-  }}
-
-  .sig-controls {{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-    font-size: 12px;
-  }}
-
-  .ink-group {{
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }}
-
-  .ink-btn {{
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 6px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }}
-
-  .ink-btn.active {{
-    border-color: #000080;
-    background: #eff6ff;
-    color: #000080;
-    box-shadow: 0 0 0 1px #000080;
-  }}
-
-  .ink-btn.black.active {{
-    border-color: #111111;
-    background: #f1f5f9;
-    color: #111111;
-    box-shadow: 0 0 0 1px #111111;
-  }}
-
-  .btn-clear {{
-    background: #ffffff;
-    border: 1px solid #fecdd3;
-    color: #be123c;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-  }}
-
-  .btn-clear:hover {{
-    background: #ffe4e6;
-  }}
-
-  .canvas-wrapper {{
-    position: relative;
-    border: 2px dashed #cbd5e1;
-    border-radius: 8px;
-    background: #ffffff;
-    overflow: hidden;
-  }}
-
-  canvas#sig-pad {{
-    width: 100%;
-    height: 120px;
-    display: block;
-    cursor: crosshair;
-    touch-action: none;
-  }}
-
-  .sig-guide {{
-    position: absolute;
-    bottom: 12px;
-    left: 16px;
-    right: 16px;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    font-size: 9px;
-    color: #94a3b8;
-    pointer-events: none;
-  }}
-
-  .quick-btns {{
-    display: flex;
-    gap: 8px;
-    margin-bottom: 14px;
-  }}
-
-  .btn-small {{
-    font-size: 11px;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    border: 1px solid #cbd5e1;
-    background: #f8fafc;
-  }}
-
-  .btn-small.green {{
-    background: #ecfdf5;
-    border-color: #a7f3d0;
-    color: #065f46;
-  }}
-
-  /* Right Action Buttons */
-  .action-bar {{
-    margin-bottom: 14px;
-  }}
-
-  .action-buttons {{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 10px;
-  }}
-
-  .btn-download {{
-    background-color: #0b6623;
-    color: #ffffff;
-    border: none;
-    padding: 12px 16px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow: 0 4px 6px -1px rgba(11, 102, 35, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: background-color 0.15s;
-  }}
-
-  .btn-download:hover {{
-    background-color: #084c1a;
-  }}
-
-  .btn-download:disabled {{
-    background-color: #cbd5e1;
-    cursor: not-allowed;
-    box-shadow: none;
-  }}
-
-  .btn-print {{
-    background-color: #ffffff;
-    color: #1e293b;
-    border: 2px solid #cbd5e1;
-    padding: 12px 16px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }}
-
-  .btn-print:hover {{
-    background-color: #f1f5f9;
-  }}
-
-  .reminder-box {{
-    background: #fffbeb;
-    border: 1px solid #fde68a;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 11px;
-    color: #92400e;
-    margin-bottom: 10px;
-    display: none;
-  }}
-
-  .success-box {{
-    background: #ecfdf5;
-    border: 1px solid #a7f3d0;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 11px;
-    color: #065f46;
-    margin-bottom: 10px;
-    display: none;
-  }}
-
-  /* Live A4 Letter Preview Sheet */
-  .a4-container {{
-    display: flex;
-    justify-content: center;
-    background: transparent;
-  }}
-
-  #a4-letter-sheet {{
-    width: 794px;
-    min-height: 1123px;
-    background-color: #ffffff;
-    color: #111111;
-    font-family: 'Times New Roman', Times, Georgia, serif;
-    font-size: 11.5pt;
-    line-height: 1.65;
-    padding: 76px 72px 80px 72px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-    box-sizing: border-box;
-    text-align: left;
-  }}
-
-  .memo-line {{
-    display: flex;
-    margin-bottom: 4px;
-  }}
-
-  .memo-label {{
-    width: 80px;
-    font-weight: bold;
-  }}
-
-  .subject-line {{
-    font-weight: bold;
-    text-decoration: underline;
-    margin: 16px 0;
-    display: block;
-    letter-spacing: 0.2px;
-  }}
-
-  .letter-body {{
-    margin: 16px 0 24px 0;
-    text-align: left;
-    line-height: 1.65;
-  }}
-
-  .sig-img-container {{
-    height: 60px;
-    display: flex;
-    align-items: flex-end;
-    margin: 10px 0;
-  }}
-
-  .sig-img-container img {{
-    max-height: 55px;
-    max-width: 260px;
-    object-fit: contain;
-  }}
-
-  .sig-empty-placeholder {{
-    height: 45px;
-    width: 200px;
-    border: 1px dashed #cbd5e1;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10pt;
-    color: #94a3b8;
-    font-style: italic;
-  }}
-
-  @media print {{
-    body {{
-      background: #ffffff !important;
-      padding: 0 !important;
-    }}
-    .no-print, .portal-header, .form-card, .action-bar {{
-      display: none !important;
-    }}
-    #a4-letter-sheet {{
-      border: none !important;
-      box-shadow: none !important;
-      margin: 0 !important;
-      padding: 24mm 22mm !important;
-      width: 210mm !important;
-    }}
-  }}
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {{
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            margin: 0;
+            padding: 0;
+        }}
+        .a4-sheet {{
+            background: #ffffff;
+            width: 100%;
+            max-width: 794px;
+            min-height: 1020px;
+            padding: 64px 72px;
+            box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+            font-family: 'Times New Roman', Times, serif;
+            color: #000000;
+            font-size: 12pt;
+            line-height: 1.65;
+            letter-spacing: normal !important;
+            word-spacing: normal !important;
+            font-kerning: none;
+            box-sizing: border-box;
+            margin: 0 auto;
+        }}
+        @media (max-width: 640px) {{
+            .a4-sheet {{
+                padding: 32px 24px;
+                font-size: 11pt;
+                min-height: auto;
+            }}
+        }}
+        @media print {{
+            body * {{ visibility: hidden; }}
+            #a4-document, #a4-document * {{ visibility: visible; }}
+            #a4-document {{
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 20mm !important;
+            }}
+        }}
+    </style>
 </head>
-<body>
+<body class="min-h-screen pb-12">
 
-<!-- Header -->
-<div class="portal-header no-print">
-  <div class="header-left">
-    <!-- Republic Hall Crest SVG -->
-    <svg class="crest-svg" viewBox="0 0 200 200" role="img" aria-label="Republic Hall KNUST Crest">
-      <defs>
-        <linearGradient id="crestGreen" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#0b6623"/>
-          <stop offset="100%" stop-color="#074417"/>
-        </linearGradient>
-        <linearGradient id="crestGold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#f7e07c"/>
-          <stop offset="40%" stop-color="#d4af37"/>
-          <stop offset="100%" stop-color="#9a7b1c"/>
-        </linearGradient>
-        <path id="crestTop" d="M 28 100 A 72 72 0 1 1 172 100" fill="none"/>
-        <path id="crestBot" d="M 172 100 A 72 72 0 0 1 28 100" fill="none"/>
-      </defs>
-      <circle cx="100" cy="100" r="98" fill="url(#crestGold)" stroke="#785e13" stroke-width="1.5"/>
-      <circle cx="100" cy="100" r="92" fill="url(#crestGreen)" stroke="url(#crestGold)" stroke-width="2"/>
-      <circle cx="100" cy="100" r="66" fill="#fcfbf7" stroke="url(#crestGold)" stroke-width="3"/>
-      <text fill="#ffffff" font-size="13" font-weight="800" letter-spacing="2.5" font-family="sans-serif">
-        <textPath href="#crestTop" startOffset="50%" text-anchor="middle">REPUBLIC HALL</textPath>
-      </text>
-      <text fill="#ffffff" font-size="7.8" font-weight="700" letter-spacing="0.8" font-family="sans-serif">
-        <textPath href="#crestBot" startOffset="50%" text-anchor="middle">KWAME NKRUMAH UNIV. OF SCI. & TECH.</textPath>
-      </text>
-      <path d="M 68 62 L 132 62 C 132 94 122 114 100 128 C 78 114 68 94 68 62 Z" fill="#0b6623" stroke="url(#crestGold)" stroke-width="2.5"/>
-      <!-- Torch -->
-      <g transform="translate(100, 72) scale(0.65)">
-        <path d="M 0 -22 C -6 -12 -8 -4 0 4 C 8 -4 6 -12 0 -22 Z" fill="#e65100"/>
-        <path d="M 0 -18 C -3 -11 -4 -5 0 1 C 4 -5 3 -11 0 -18 Z" fill="#ffb300"/>
-        <path d="M -12 4 L 12 4 L 6 16 L -6 16 Z" fill="url(#crestGold)"/>
-        <path d="M -4 16 L 4 16 L 2 34 L -2 34 Z" fill="url(#crestGold)"/>
-      </g>
-      <!-- Book -->
-      <g transform="translate(100, 106) scale(0.68)">
-        <path d="M 0 -2 C -12 -10 -28 -8 -32 -2 L -32 16 C -28 10 -12 8 0 16 C 12 8 28 10 32 16 L 32 -2 C 28 -8 12 -10 0 -2 Z" fill="#ffffff" stroke="#0b6623" stroke-width="1.5"/>
-        <line x1="0" y1="-2" x2="0" y2="16" stroke="#0b6623" stroke-width="2"/>
-      </g>
-      <!-- Banner -->
-      <g transform="translate(100, 150)">
-        <path d="M -68 0 L -60 -10 L -46 -5 L 46 -5 L 60 -10 L 68 0 L 56 12 L -56 12 Z" fill="#d4af37" stroke="#785e13" stroke-width="1.2"/>
-        <text x="0" y="7" fill="#084c1a" font-size="9.5" font-weight="900" letter-spacing="1.8" text-anchor="middle" font-family="sans-serif">SET THE PACE</text>
-      </g>
-    </svg>
-    <div class="header-title-box">
-      <div class="sub">KWAME NKRUMAH UNIVERSITY OF SCIENCE &amp; TECHNOLOGY, KUMASI</div>
-      <h1>REPUBLIC HALL <span class="motto-badge">SET THE PACE</span></h1>
-      <div class="header-subtitle">Fellow Application Portal &bull; Official Secretariat Generator</div>
-    </div>
-  </div>
-</div>
-
-<!-- Main Split Screen Grid -->
-<div class="grid-layout">
-  <!-- Left Column: Form & Live Signature Canvas -->
-  <div class="form-card no-print">
-    <div class="form-title">
-      <span>Applicant Information</span>
-      <span class="compulsory-pill">Compulsory (*)</span>
-    </div>
-    <div class="form-desc">Complete all fields and draw your signature below.</div>
-
-    <div class="quick-btns">
-      <button type="button" class="btn-small green" id="btn-sample">Reset Sample Data</button>
-      <button type="button" class="btn-small" id="btn-clear-all">Clear All</button>
-    </div>
-
-    <!-- Inputs -->
-    <div class="form-group">
-      <label>Full Name &amp; Academic Title/Rank <span class="req">*</span></label>
-      <input type="text" id="inp-name" class="form-input" value="Dr. John Mensah, Senior Lecturer" placeholder="e.g. Dr. John Mensah, Senior Lecturer">
-    </div>
-
-    <div class="form-group">
-      <label>College / Faculty / Department / Office <span class="req">*</span></label>
-      <input type="text" id="inp-dept" class="form-input" value="College of Engineering / Dept. of Mechanical Engineering" placeholder="e.g. College of Engineering / Dept. of Mechanical Engineering">
-    </div>
-
-    <div class="two-cols">
-      <div class="form-group">
-        <label>Phone Number <span class="req">*</span></label>
-        <input type="tel" id="inp-phone" class="form-input" value="0240000000" placeholder="0240000000">
-      </div>
-      <div class="form-group">
-        <label>Email Address <span class="req">*</span></label>
-        <input type="email" id="inp-email" class="form-input" value="jmensah@knust.edu.gh" placeholder="jmensah@knust.edu.gh">
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Application Date <span class="req">*</span></label>
-      <input type="text" id="inp-date" class="form-input" value="{today_str}" placeholder="e.g. {today_str}">
-    </div>
-
-    <!-- Live Implemented Drawing Signature Pad -->
-    <div class="sig-section">
-      <div class="sig-header">
-        <label style="font-weight: 800; font-size: 12px; color: #0b6623;">
-          ✍️ Live Electronic Signature <span class="req">*</span>
-        </label>
-        <span class="sig-badge" id="sig-status">Live Signature Active</span>
-      </div>
-
-      <div class="sig-controls">
-        <div class="ink-group">
-          <span style="font-size: 11px; font-weight: 700; color: #475569;">Ink:</span>
-          <button type="button" class="ink-btn active" id="btn-ink-blue">
-            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#000080;"></span>
-            Blue Ink (#000080)
-          </button>
-          <button type="button" class="ink-btn black" id="btn-ink-black">
-            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#111111;"></span>
-            Black Ink (#111111)
-          </button>
+    <!-- Top Branding Bar -->
+    <header class="bg-[#0b6623] border-b-4 border-[#d4af37] text-white px-6 py-4 shadow-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center gap-3.5">
+                <img id="nav-crest" src="{logo_data_url}" class="h-12 w-12 rounded-full bg-white p-0.5 object-contain {'hidden' if not logo_data_url else ''}" alt="Crest" />
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold tracking-tight">REPUBLIC HALL FELLOW APPLICATION PORTAL</h1>
+                    <p class="text-xs text-[#fde047] font-semibold uppercase tracking-wider">Kwame Nkrumah University of Science and Technology (KNUST) — Set The Pace</p>
+                </div>
+            </div>
         </div>
-        <button type="button" class="btn-clear" id="btn-clear-sig">Clear Signature</button>
-      </div>
+    </header>
 
-      <div class="canvas-wrapper">
-        <canvas id="sig-pad" width="420" height="120"></canvas>
-        <div class="sig-guide">
-          <span>Sign above this line (Mouse or Touch)</span>
-          <span>Republic Hall, KNUST</span>
-        </div>
-      </div>
-    </div>
-  </div>
+    <!-- Main Split Layout -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-  <!-- Right Column: Action Buttons & Live A4 Letter Preview -->
-  <div>
-    <!-- Action Bar -->
-    <div class="action-bar no-print">
-      <div class="action-buttons">
-        <button type="button" class="btn-download" id="btn-download-pdf">
-          <span>📥 Download Completed Application (PDF)</span>
-        </button>
-        <button type="button" class="btn-print" onclick="window.print()">
-          <span>🖨️ Print / Save as PDF</span>
-        </button>
-      </div>
-      <div class="reminder-box" id="reminder-msg">
-        ⚠️ Please complete all compulsory fields (*) and draw your signature to download.
-      </div>
-      <div class="success-box" id="success-msg">
-        ✅ Application PDF generated successfully!
-      </div>
-    </div>
+        <!-- LEFT COLUMN: Form Controls -->
+        <section class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
 
-    <!-- Live A4 Sheet Preview -->
-    <div class="a4-container">
-      <div id="a4-letter-sheet">
-        <!-- Date Block -->
-        <div class="memo-line">
-          <div class="memo-label">Date:</div>
-          <div id="prev-date">{today_str}</div>
-        </div>
-        <div class="memo-line">
-          <div class="memo-label">To:</div>
-          <div>Hall Warden, Republic Hall</div>
-        </div>
-        <div class="memo-line" style="align-items: flex-start; margin-bottom: 18px;">
-          <div class="memo-label">From:</div>
-          <div>
-            <div id="prev-name">Dr. John Mensah, Senior Lecturer</div>
-            <div><span id="prev-dept">College of Engineering / Dept. of Mechanical Engineering</span>, KNUST</div>
-          </div>
-        </div>
+            <!-- Full Name & Academic Title -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
+                    FULL NAME & ACADEMIC TITLE / RANK <span class="text-red-600">*</span>
+                </label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    </span>
+                    <input id="inp-name" type="text" value="Dr. John Mensah, Senior Lecturer" placeholder="e.g., Dr. John Mensah, Senior Lecturer"
+                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b6623] transition" />
+                </div>
+                <p class="text-xs text-slate-400 mt-1">Include honorary title, prefix (e.g., Prof., Dr., Mr., Mrs.), and university rank.</p>
+            </div>
 
-        <div>Dear Hall Master/Warden,</div>
+            <!-- College / Faculty / Department / Office / Center -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
+                    COLLEGE / FACULTY / DEPARTMENT / OFFICE / CENTER <span class="text-red-600">*</span>
+                </label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    </span>
+                    <input id="inp-unit" type="text" value="College of Engineering / Dept. of Mechanical Engineering" placeholder="e.g., College of Engineering / Dept. of Mechanical Engineering"
+                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b6623] transition" />
+                </div>
+                <p class="text-xs text-slate-400 mt-1">State your primary academic college, faculty, institute, or university unit.</p>
+            </div>
 
-        <div class="subject-line">APPLICATION FOR FELLOWSHIP OF REPUBLIC HALL, KNUST</div>
+            <!-- Phone & Email Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
+                        PHONE NUMBER <span class="text-red-600">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                        </span>
+                        <input id="inp-phone" type="tel" value="0240000000" placeholder="0240000000"
+                            class="w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b6623] transition" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
+                        EMAIL ADDRESS <span class="text-red-600">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        </span>
+                        <input id="inp-email" type="email" value="jmensah@knust.edu.gh" placeholder="jmensah@knust.edu.gh"
+                            class="w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b6623] transition" />
+                    </div>
+                </div>
+            </div>
 
-        <div class="letter-body">
-          <p>
-            I write to formally express my interest in serving as a Fellow of Republic Hall, KNUST. I am eager to actively network and collaborate with other Fellows and past students (alumni) to advance the rich traditions, mentorship networks, and continuous development of the Hall. Furthermore, I am deeply committed to promoting student welfare, academic excellence, and a supportive residential community in close partnership with Hall Management. I thank you for your kind consideration and look forward to hearing favorably from you soon.
-          </p>
-        </div>
+            <!-- Application Date -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                        APPLICATION DATE <span class="text-red-600">*</span>
+                    </label>
+                    <button type="button" id="btn-today" class="text-xs font-semibold text-[#0b6623] hover:underline">
+                        Set Today's Date
+                    </button>
+                </div>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </span>
+                    <input id="inp-date" type="text" value="November 11, 2026"
+                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b6623] transition" />
+                </div>
+                <p class="text-xs text-slate-400 mt-1">Standard format: Month DD, YYYY (e.g. November 11, 2026)</p>
+            </div>
 
-        <div style="margin-top: 24px;">Yours faithfully,</div>
+            <!-- Electronic Signature Section -->
+            <div class="pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between mb-2.5">
+                    <label class="text-sm font-bold text-slate-800">
+                        Electronic Signature <span class="text-red-600">*</span>
+                    </label>
+                    <span id="sig-badge" class="hidden inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        ✓ Signature Attached
+                    </span>
+                </div>
 
-        <!-- Rendered Live Signature -->
-        <div class="sig-img-container" id="prev-sig-box">
-          <img id="prev-sig-img" src="" alt="Electronic Signature" style="display:none;" />
-          <div id="prev-sig-none" class="sig-empty-placeholder">[Signature Required]</div>
-        </div>
+                <!-- Tabs -->
+                <div class="grid grid-cols-2 bg-slate-100 p-1 rounded-xl mb-3">
+                    <button type="button" id="tab-draw" class="py-2 text-xs font-bold rounded-lg bg-white text-[#0b6623] shadow-sm transition">
+                        ✒️ Tab 1: Draw Signature
+                    </button>
+                    <button type="button" id="tab-upload" class="py-2 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition">
+                        ⬆️ Tab 2: Upload Signature
+                    </button>
+                </div>
 
-        <div style="line-height: 1.4; margin-top: 6px;">
-          <div style="font-weight: bold;" id="prev-name-footer">Dr. John Mensah, Senior Lecturer</div>
-          <div><span id="prev-dept-footer">College of Engineering / Dept. of Mechanical Engineering</span>, KNUST</div>
-          <div style="font-size: 10.5pt; color: #334155; margin-top: 2px;">
-            Contact: <span id="prev-phone">0240000000</span> / <span id="prev-email">jmensah@knust.edu.gh</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+                <!-- Draw Panel -->
+                <div id="panel-draw" class="space-y-2.5">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate-600 font-medium">Ink Color:</span>
+                            <button type="button" id="ink-blue" class="px-3 py-1 rounded-lg text-xs font-semibold border-2 border-[#000080] bg-blue-50 text-[#000080] flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#000080]"></span> Blue Ink (#000080)
+                            </button>
+                            <button type="button" id="ink-black" class="px-3 py-1 rounded-lg text-xs font-semibold border border-slate-300 bg-white text-slate-800 flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#111111]"></span> Black Ink (#111111)
+                            </button>
+                        </div>
+                        <button type="button" id="btn-clear-sig" class="px-3 py-1 rounded-lg text-xs font-semibold border border-rose-200 text-rose-600 hover:bg-rose-50 transition">
+                            ↻ Clear Signature
+                        </button>
+                    </div>
 
-<script>
-  // DOM Elements
-  const inpName = document.getElementById('inp-name');
-  const inpDept = document.getElementById('inp-dept');
-  const inpPhone = document.getElementById('inp-phone');
-  const inpEmail = document.getElementById('inp-email');
-  const inpDate = document.getElementById('inp-date');
+                    <div class="relative rounded-xl border-2 border-dashed border-slate-300 bg-white overflow-hidden">
+                        <canvas id="sig-canvas" width="460" height="150" class="w-full h-[150px] cursor-crosshair touch-none"></canvas>
+                        <div class="pointer-events-none absolute bottom-3 left-5 right-5 border-b border-slate-200 flex justify-between text-[10px] text-slate-300 pb-0.5">
+                            <span>Sign above this line</span>
+                            <span>Kwame Nkrumah University of Science and Technology</span>
+                        </div>
+                    </div>
+                </div>
 
-  const prevName = document.getElementById('prev-name');
-  const prevNameFooter = document.getElementById('prev-name-footer');
-  const prevDept = document.getElementById('prev-dept');
-  const prevDeptFooter = document.getElementById('prev-dept-footer');
-  const prevPhone = document.getElementById('prev-phone');
-  const prevEmail = document.getElementById('prev-email');
-  const prevDate = document.getElementById('prev-date');
+                <!-- Upload Panel -->
+                <div id="panel-upload" class="hidden">
+                    <label class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl p-6 cursor-pointer hover:bg-slate-50 transition">
+                        <span class="text-xs font-semibold text-[#0b6623] mb-1">Click to upload signature image (PNG or JPG)</span>
+                        <span class="text-[11px] text-slate-400">Transparent PNG or white background recommended</span>
+                        <input id="inp-sig-file" type="file" accept="image/png,image/jpeg" class="hidden" />
+                    </label>
+                </div>
+            </div>
 
-  const prevSigBox = document.getElementById('prev-sig-box');
-  const prevSigImg = document.getElementById('prev-sig-img');
-  const prevSigNone = document.getElementById('prev-sig-none');
+            <!-- Validation Notice -->
+            <div id="validation-banner" class="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs font-medium text-amber-800">
+                ⚠️ Please sign inside the signature box (or upload a signature) and ensure all compulsory (*) fields are filled to unlock your PDF download.
+            </div>
 
-  const btnDownload = document.getElementById('btn-download-pdf');
-  const reminderMsg = document.getElementById('reminder-msg');
-  const successMsg = document.getElementById('success-msg');
+        </section>
 
-  const btnBlue = document.getElementById('btn-ink-blue');
-  const btnBlack = document.getElementById('btn-ink-black');
-  const btnClearSig = document.getElementById('btn-clear-sig');
-  const btnSample = document.getElementById('btn-sample');
-  const btnClearAll = document.getElementById('btn-clear-all');
-  const sigStatus = document.getElementById('sig-status');
+        <!-- RIGHT COLUMN: Actions + Highlighted Number + Live A4 Preview -->
+        <section class="lg:col-span-7 space-y-4">
 
-  // Canvas Setup
-  const canvas = document.getElementById('sig-pad');
-  const ctx = canvas.getContext('2d');
-  let isDrawing = false;
-  let hasDrawn = false;
-  let inkColor = '#000080';
+            <!-- Highlighted Submission Phone Callout Banner -->
+            <div class="bg-amber-50/90 border-2 border-[#d4af37] rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <span class="inline-block text-[11px] font-bold uppercase tracking-wider bg-[#0b6623] text-white px-2.5 py-0.5 rounded-md mb-1">
+                        Step 2: Where to Send Your Downloaded PDF
+                    </span>
+                    <p class="text-xs text-slate-700">
+                        After downloading your signed PDF below, send it via WhatsApp or contact:
+                    </p>
+                    <div class="mt-1 flex items-center gap-2">
+                        <span id="sub-phone-text" class="text-base sm:text-lg font-extrabold text-[#0b6623] bg-white px-3 py-1 rounded-lg border border-emerald-200 tracking-wide select-all">
+                            {SUBMISSION_PHONE_DISPLAY}
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5 w-full sm:w-auto">
+                    <button type="button" id="btn-copy-phone"
+                        class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-white text-slate-800 border border-slate-300 hover:bg-slate-100 shadow-sm transition">
+                        📋 <span id="copy-btn-label">Copy Number</span>
+                    </button>
+                    <a href="https://wa.me/{SUBMISSION_PHONE_RAW}" target="_blank" rel="noopener noreferrer"
+                        class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#0b6623] text-white hover:bg-[#09521c] shadow-sm transition">
+                        💬 Send on WhatsApp
+                    </a>
+                </div>
+            </div>
 
-  function initCanvas() {{
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * 2;
-    canvas.height = rect.height * 2;
-    ctx.scale(2, 2);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = 2.2;
-    ctx.strokeStyle = inkColor;
-    drawSampleSignature();
-  }}
+            <!-- Action Buttons Row (Matches Screenshot 3) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <button type="button" id="btn-download-pdf" disabled
+                    class="w-full py-3.5 px-5 rounded-xl font-bold text-sm text-white bg-[#0b6623] hover:bg-[#09521c] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex items-center justify-center gap-2 transition">
+                    ⬇️ Download Completed Application (PDF)
+                </button>
+                <button type="button" id="btn-print"
+                    class="w-full py-3.5 px-5 rounded-xl font-bold text-sm text-slate-800 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm flex items-center justify-center gap-2 transition">
+                    🖨️ Print / Save as PDF
+                </button>
+            </div>
 
-  // Draw default sample signature
-  function drawSampleSignature() {{
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = inkColor;
-    ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    ctx.moveTo(30, 60);
-    ctx.bezierCurveTo(70, 20, 110, 80, 160, 45);
-    ctx.bezierCurveTo(190, 25, 220, 75, 270, 50);
-    ctx.bezierCurveTo(300, 35, 330, 80, 370, 55);
-    ctx.stroke();
+            <!-- Live A4 Document Sheet (Matches Screenshot 3) -->
+            <div id="a4-document" class="a4-sheet">
 
-    ctx.beginPath();
-    ctx.moveTo(80, 75);
-    ctx.bezierCurveTo(150, 85, 260, 80, 350, 70);
-    ctx.stroke();
+                <!-- Optional Crest Header if logo exists in repo -->
+                <div id="doc-crest-wrap" class="text-center mb-5 {'hidden' if not logo_data_url else ''}">
+                    <img id="doc-crest" src="{logo_data_url}" class="h-16 mx-auto object-contain" alt="Republic Hall Crest" />
+                </div>
 
-    hasDrawn = true;
-    updateSigPreview();
-  }}
+                <!-- Memo Metadata Table starting directly with Date -->
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 12pt;">
+                    <tr>
+                        <td style="width: 85px; font-weight: bold; padding-bottom: 6px; vertical-align: top;">Date:</td>
+                        <td id="out-date" style="padding-bottom: 6px; vertical-align: top;">November 11, 2026</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; padding-bottom: 6px; vertical-align: top;">To:</td>
+                        <td style="padding-bottom: 6px; vertical-align: top;">Hall Warden, Republic Hall</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; vertical-align: top;">From:</td>
+                        <td style="vertical-align: top;">
+                            <div id="out-name">Dr. John Mensah, Senior Lecturer</div>
+                            <div><span id="out-unit">College of Engineering / Dept. of Mechanical Engineering</span>, KNUST</div>
+                        </td>
+                    </tr>
+                </table>
 
-  function updateSigPreview() {{
-    if (hasDrawn) {{
-      const dataUrl = canvas.toDataURL('image/png');
-      prevSigImg.src = dataUrl;
-      prevSigImg.style.display = 'block';
-      prevSigNone.style.display = 'none';
-      sigStatus.textContent = 'Live Signature Active';
-      sigStatus.style.background = '#ecfdf5';
-      sigStatus.style.color = '#065f46';
-    }} else {{
-      prevSigImg.src = '';
-      prevSigImg.style.display = 'none';
-      prevSigNone.style.display = 'flex';
-      sigStatus.textContent = 'Signature Required';
-      sigStatus.style.background = '#fef2f2';
-      sigStatus.style.color = '#991b1b';
-    }}
-    validate();
-  }}
+                <!-- Salutation -->
+                <div style="margin-bottom: 16px;">Dear Hall Master/Warden,</div>
 
-  // Drawing Event Listeners
-  function getPos(e) {{
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return {{
-      x: clientX - rect.left,
-      y: clientY - rect.top
-    }};
-  }}
+                <!-- Bold Underlined Subject Line -->
+                <div style="font-weight: bold; text-decoration: underline; margin-bottom: 18px;">
+                    APPLICATION FOR FELLOWSHIP OF REPUBLIC HALL, KNUST
+                </div>
 
-  function startDraw(e) {{
-    if (e.touches) e.preventDefault();
-    isDrawing = true;
-    const pos = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-  }}
+                <!-- Concise 5-Line Body Paragraph -->
+                <p style="margin-bottom: 28px; text-align: left; line-height: 1.75;">
+                    I write to formally express my interest in serving as a Fellow of Republic Hall, KNUST. I am eager to actively network and collaborate with other Fellows and past students (alumni) to advance the rich traditions, mentorship networks, and continuous development of the Hall. Furthermore, I am deeply committed to promoting student welfare, academic excellence, and a supportive residential community in close partnership with Hall Management. I thank you for your kind consideration and look forward to hearing favorably from you soon.
+                </p>
 
-  function drawMove(e) {{
-    if (!isDrawing) return;
-    if (e.touches) e.preventDefault();
-    const pos = getPos(e);
-    ctx.strokeStyle = inkColor;
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
-    hasDrawn = true;
-    updateSigPreview();
-  }}
+                <!-- Sign-off -->
+                <div style="margin-bottom: 8px;">Yours faithfully,</div>
 
-  function stopDraw() {{
-    if (!isDrawing) return;
-    isDrawing = false;
-    updateSigPreview();
-  }}
+                <!-- Signature Image Container -->
+                <div style="height: 60px; margin: 6px 0 10px 0; display: flex; align-items: center;">
+                    <img id="out-sig-img" src="" alt="Signature" style="max-height: 56px; max-width: 210px; object-fit: contain; display: none;" />
+                    <span id="out-sig-empty" style="font-size: 10pt; color: #94a3b8; font-style: italic;">[Electronic Signature Pending]</span>
+                </div>
 
-  canvas.addEventListener('mousedown', startDraw);
-  canvas.addEventListener('mousemove', drawMove);
-  canvas.addEventListener('mouseup', stopDraw);
-  canvas.addEventListener('mouseleave', stopDraw);
+                <!-- Signatory Block -->
+                <div id="out-sign-name" style="font-weight: bold;">Dr. John Mensah, Senior Lecturer</div>
+                <div><span id="out-sign-unit">College of Engineering / Dept. of Mechanical Engineering</span>, KNUST</div>
+                <div style="font-size: 11pt; color: #334155; margin-top: 2px;">
+                    Contact: <span id="out-phone">0240000000</span> / <span id="out-email">jmensah@knust.edu.gh</span>
+                </div>
 
-  canvas.addEventListener('touchstart', startDraw, {{ passive: false }});
-  canvas.addEventListener('touchmove', drawMove, {{ passive: false }});
-  canvas.addEventListener('touchend', stopDraw);
+            </div>
+        </section>
+    </main>
 
-  // Ink Controls
-  btnBlue.onclick = () => {{
-    inkColor = '#000080';
-    btnBlue.classList.add('active');
-    btnBlack.classList.remove('active');
-  }};
+    <script>
+        // Elements
+        const inpName = document.getElementById('inp-name');
+        const inpUnit = document.getElementById('inp-unit');
+        const inpPhone = document.getElementById('inp-phone');
+        const inpEmail = document.getElementById('inp-email');
+        const inpDate = document.getElementById('inp-date');
 
-  btnBlack.onclick = () => {{
-    inkColor = '#111111';
-    btnBlack.classList.add('active');
-    btnBlue.classList.remove('active');
-  }};
+        const outDate = document.getElementById('out-date');
+        const outName = document.getElementById('out-name');
+        const outUnit = document.getElementById('out-unit');
+        const outSignName = document.getElementById('out-sign-name');
+        const outSignUnit = document.getElementById('out-sign-unit');
+        const outPhone = document.getElementById('out-phone');
+        const outEmail = document.getElementById('out-email');
 
-  btnClearSig.onclick = () => {{
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    hasDrawn = false;
-    updateSigPreview();
-  }};
+        const outSigImg = document.getElementById('out-sig-img');
+        const outSigEmpty = document.getElementById('out-sig-empty');
+        const sigBadge = document.getElementById('sig-badge');
+        const validationBanner = document.getElementById('validation-banner');
+        const btnDownload = document.getElementById('btn-download-pdf');
 
-  // Live Sync Inputs to Preview
-  function updateText() {{
-    const name = inpName.value.trim() || '[Full Name & Academic Title/Rank]';
-    const dept = inpDept.value.trim() || '[College/Faculty/Department/Office]';
-    const phone = inpPhone.value.trim() || '[Phone Number]';
-    const email = inpEmail.value.trim() || '[Email Address]';
-    const dateVal = inpDate.value.trim() || '[Application Date]';
+        let signatureDataUrl = '';
 
-    prevName.textContent = name;
-    prevNameFooter.textContent = name;
-    prevDept.textContent = dept;
-    prevDeptFooter.textContent = dept;
-    prevPhone.textContent = phone;
-    prevEmail.textContent = email;
-    prevDate.textContent = dateVal;
+        // Copy Phone Number button
+        document.getElementById('btn-copy-phone').addEventListener('click', () => {{
+            const rawPhone = document.getElementById('sub-phone-text').innerText.trim();
+            navigator.clipboard.writeText(rawPhone);
+            const lbl = document.getElementById('copy-btn-label');
+            lbl.innerText = '✓ Copied!';
+            setTimeout(() => {{ lbl.innerText = 'Copy Number'; }}, 2000);
+        }});
 
-    validate();
-  }}
+        // Set Today's Date
+        document.getElementById('btn-today').addEventListener('click', () => {{
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {{ month: 'long', day: 'numeric', year: 'numeric' }});
+            inpDate.value = formatted;
+            syncPreview();
+        }});
 
-  [inpName, inpDept, inpPhone, inpEmail, inpDate].forEach(el => {{
-    el.addEventListener('input', updateText);
-  }});
+        // Signature Canvas Setup
+        const canvas = document.getElementById('sig-canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        let strokeColor = '#000080';
 
-  // Validation
-  function validate() {{
-    const isValid = inpName.value.trim() &&
-                    inpDept.value.trim() &&
-                    inpPhone.value.trim() &&
-                    inpEmail.value.trim() &&
-                    inpDate.value.trim() &&
-                    hasDrawn;
+        function configureCtx() {{
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 2.2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }}
+        configureCtx();
 
-    if (isValid) {{
-      btnDownload.disabled = false;
-      reminderMsg.style.display = 'none';
-    }} else {{
-      btnDownload.disabled = true;
-      reminderMsg.style.display = 'block';
-    }}
-    return isValid;
-  }}
+        function getPos(e) {{
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {{
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            }};
+        }}
 
-  // Reset Sample
-  btnSample.onclick = () => {{
-    inpName.value = 'Dr. John Mensah, Senior Lecturer';
-    inpDept.value = 'College of Engineering / Dept. of Mechanical Engineering';
-    inpPhone.value = '0240000000';
-    inpEmail.value = 'jmensah@knust.edu.gh';
-    inpDate.value = '{today_str}';
-    drawSampleSignature();
-    updateText();
-  }};
+        function startDraw(e) {{
+            e.preventDefault();
+            drawing = true;
+            configureCtx();
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }}
 
-  // Clear All
-  btnClearAll.onclick = () => {{
-    inpName.value = '';
-    inpDept.value = '';
-    inpPhone.value = '';
-    inpEmail.value = '';
-    inpDate.value = '';
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    hasDrawn = false;
-    updateSigPreview();
-    updateText();
-  }};
+        function moveDraw(e) {{
+            if (!drawing) return;
+            e.preventDefault();
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }}
 
-  // PDF Download using html2canvas & jsPDF
-  btnDownload.onclick = async () => {{
-    if (!validate()) return;
-    try {{
-      btnDownload.innerText = 'Generating Crisp PDF...';
-      btnDownload.disabled = true;
+        function endDraw(e) {{
+            if (!drawing) return;
+            e.preventDefault();
+            drawing = false;
+            signatureDataUrl = canvas.toDataURL('image/png');
+            syncPreview();
+        }}
 
-      const sheet = document.getElementById('a4-letter-sheet');
-      
-      const canvasCaptured = await html2canvas(sheet, {{
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        width: 794,
-        windowWidth: 794
-      }});
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', moveDraw);
+        window.addEventListener('mouseup', endDraw);
+        canvas.addEventListener('touchstart', startDraw, {{ passive: false }});
+        canvas.addEventListener('touchmove', moveDraw, {{ passive: false }});
+        canvas.addEventListener('touchend', endDraw, {{ passive: false }});
 
-      const {{ jsPDF }} = window.jspdf;
-      const pdf = new jsPDF('portrait', 'mm', 'a4');
-      const imgData = canvasCaptured.toDataURL('image/png', 1.0);
-      pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
+        // Ink color switchers
+        const btnBlue = document.getElementById('ink-blue');
+        const btnBlack = document.getElementById('ink-black');
+        btnBlue.addEventListener('click', () => {{
+            strokeColor = '#000080';
+            btnBlue.className = 'px-3 py-1 rounded-lg text-xs font-semibold border-2 border-[#000080] bg-blue-50 text-[#000080] flex items-center gap-1.5';
+            btnBlack.className = 'px-3 py-1 rounded-lg text-xs font-semibold border border-slate-300 bg-white text-slate-800 flex items-center gap-1.5';
+        }});
+        btnBlack.addEventListener('click', () => {{
+            strokeColor = '#111111';
+            btnBlack.className = 'px-3 py-1 rounded-lg text-xs font-semibold border-2 border-slate-900 bg-slate-100 text-slate-900 flex items-center gap-1.5';
+            btnBlue.className = 'px-3 py-1 rounded-lg text-xs font-semibold border border-slate-300 bg-white text-slate-700 flex items-center gap-1.5';
+        }});
 
-      const cleanName = (inpName.value || 'Applicant').trim().replace(/[^\\w\\s-]/g, '').replace(/\\s+/g, '_');
-      pdf.save(`Republic_Hall_Fellow_Application_${{cleanName}}.pdf`);
+        // Clear Signature
+        document.getElementById('btn-clear-sig').addEventListener('click', () => {{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            signatureDataUrl = '';
+            syncPreview();
+        }});
 
-      successMsg.style.display = 'block';
-      setTimeout(() => {{ successMsg.style.display = 'none'; }}, 4000);
-    }} catch (err) {{
-      alert('Error generating PDF: ' + err.message);
-    }} finally {{
-      btnDownload.innerHTML = '<span>📥 Download Completed Application (PDF)</span>';
-      validate();
-    }}
-  }};
+        // Tabs for Draw vs Upload Signature
+        const tabDraw = document.getElementById('tab-draw');
+        const tabUpload = document.getElementById('tab-upload');
+        const panelDraw = document.getElementById('panel-draw');
+        const panelUpload = document.getElementById('panel-upload');
 
-  // Initialize
-  window.addEventListener('load', () => {{
-    initCanvas();
-    updateText();
-  }});
-  setTimeout(initCanvas, 100);
-</script>
+        tabDraw.addEventListener('click', () => {{
+            panelDraw.classList.remove('hidden');
+            panelUpload.classList.add('hidden');
+            tabDraw.className = 'py-2 text-xs font-bold rounded-lg bg-white text-[#0b6623] shadow-sm transition';
+            tabUpload.className = 'py-2 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition';
+        }});
+        tabUpload.addEventListener('click', () => {{
+            panelUpload.classList.remove('hidden');
+            panelDraw.classList.add('hidden');
+            tabUpload.className = 'py-2 text-xs font-bold rounded-lg bg-white text-[#0b6623] shadow-sm transition';
+            tabDraw.className = 'py-2 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition';
+        }});
+
+        // Upload Signature File
+        document.getElementById('inp-sig-file').addEventListener('change', (e) => {{
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {{
+                signatureDataUrl = ev.target.result;
+                syncPreview();
+            }};
+            reader.readAsDataURL(file);
+        }});
+
+        // Live Sync
+        function syncPreview() {{
+            const vName = inpName.value.trim();
+            const vUnit = inpUnit.value.trim();
+            const vPhone = inpPhone.value.trim();
+            const vEmail = inpEmail.value.trim();
+            const vDate = inpDate.value.trim();
+
+            outDate.textContent = vDate || '[Application Date]';
+            outName.textContent = vName || '[Full Name & Academic Title]';
+            outUnit.textContent = vUnit || '[College/Faculty/Department/Office/Center]';
+            outSignName.textContent = vName || '[Full Name & Academic Title]';
+            outSignUnit.textContent = vUnit || '[College/Faculty/Department/Office/Center]';
+            outPhone.textContent = vPhone || '[Phone Number]';
+            outEmail.textContent = vEmail || '[Email Address]';
+
+            if (signatureDataUrl) {{
+                outSigImg.src = signatureDataUrl;
+                outSigImg.style.display = 'block';
+                outSigEmpty.style.display = 'none';
+                sigBadge.classList.remove('hidden');
+            }} else {{
+                outSigImg.style.display = 'none';
+                outSigEmpty.style.display = 'inline';
+                sigBadge.classList.add('hidden');
+            }}
+
+            const allComplete = vName && vUnit && vPhone && vEmail && vDate && signatureDataUrl;
+            btnDownload.disabled = !allComplete;
+            validationBanner.style.display = allComplete ? 'none' : 'block';
+        }}
+
+        [inpName, inpUnit, inpPhone, inpEmail, inpDate].forEach(el => el.addEventListener('input', syncPreview));
+        syncPreview();
+
+        // Print Button
+        document.getElementById('btn-print').addEventListener('click', () => window.print());
+
+        // Crisp A4 PDF Download
+        btnDownload.addEventListener('click', async () => {{
+            const originalText = btnDownload.innerHTML;
+            btnDownload.innerHTML = '⏳ Generating Official PDF...';
+            btnDownload.disabled = true;
+
+            const element = document.getElementById('a4-document');
+            const canvasImg = await html2canvas(element, {{
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                windowWidth: 1200
+            }});
+
+            const imgData = canvasImg.toDataURL('image/png');
+            const {{ jsPDF }} = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvasImg.height * pdfWidth) / canvasImg.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            const cleanName = (inpName.value.trim() || 'Applicant').replace(/[^a-zA-Z0-9]/g, '_');
+            pdf.save(`Republic_Hall_Fellow_Application_${{cleanName}}.pdf`);
+
+            btnDownload.innerHTML = originalText;
+            btnDownload.disabled = false;
+        }});
+    </script>
 </body>
 </html>
 """
 
-# Render the application component in Streamlit with full height
-components.html(portal_html, height=1280, scrolling=True)
+components.html(html_portal, height=1350, scrolling=True)

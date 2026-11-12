@@ -343,10 +343,10 @@ html_portal = f"""<!DOCTYPE html>
 
                 <!-- Body Paragraphs -->
                 <p style="margin-bottom: 14px; text-align: left; line-height: 1.75;">
-                    I write to formally express my interest in being a fellow of Republic Hall, KNUST.
+                    I write to formally express my interest in being a Fellow of Republic Hall, KNUST.
                 </p>
                 <p style="margin-bottom: 14px; text-align: left; line-height: 1.75;">
-                    I am eager to join this family and collaborate with colleague fellows in advancing the traditions of the hall and providing mentorship to junior members.
+                    I am eager to join this family and collaborate with colleague Fellows in advancing the traditions of the hall and providing mentorship to junior members.
                 </p>
                 <p style="margin-bottom: 28px; text-align: left; line-height: 1.75;">
                     I thank you for your kind consideration and look forward to hearing favorably from you soon

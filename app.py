@@ -322,7 +322,7 @@ html_portal = f"""<!DOCTYPE html>
                     </tr>
                     <tr>
                         <td style="font-weight: bold; padding-bottom: 6px; vertical-align: top;">To:</td>
-                        <td style="padding-bottom: 6px; vertical-align: top;">Hall Warden, Republic Hall</td>
+                        <td style="padding-bottom: 6px; vertical-align: top;">The Hall Warden, Republic Hall</td>
                     </tr>
                     <tr>
                         <td style="font-weight: bold; vertical-align: top;">From:</td>
